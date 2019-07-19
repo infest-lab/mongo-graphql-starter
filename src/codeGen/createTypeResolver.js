@@ -9,6 +9,11 @@ import updateItemsTemplate from "./resolverTemplateMethods/updateItems";
 import updateItemsBulkTemplate from "./resolverTemplateMethods/updateItemsBulk";
 import deleteItemTemplate from "./resolverTemplateMethods/deleteItem";
 
+
+import onCreatedItemTemplate from "./resolverTemplateMethods/onCreatedItem";
+import onUpdatedItemTemplate from "./resolverTemplateMethods/onUpdatedItem";
+import onDeletedItemTemplate from "./resolverTemplateMethods/onDeletedItem";
+
 //fs.readFileSync(path.resolve(__dirname, "./resolverTemplateMethods/createItem.txt"), { encoding: "utf8" });
 
 export default function createGraphqlResolver(objectToCreate, options) {
@@ -42,10 +47,11 @@ export default function createGraphqlResolver(objectToCreate, options) {
     `const { getMongoProjection, parseRequestedFields } = projectUtilities;`,
     `const { getUpdateObject, setUpOneToManyRelationshipsForUpdate } = updateUtilities;`,
     `import { ObjectId } from "mongodb";`,
+    `import { PubSub, withFilter } from "apollo-server";`,
     `import ${objName}Metadata from "./${objName}";`,
     ...resolverSources.map(
       (src, i) =>
-        `import ResolverExtras${i + 1} from "${src}";\nconst { Query: QueryExtras${i + 1}, Mutation: MutationExtras${i + 1}, ...OtherExtras${i +
+        `import ResolverExtras${i + 1} from "${src}";\nconst { Query: QueryExtras${i + 1}, Mutation: MutationExtras${i + 1}, Subscription: SubscriptionExtras${i + 1}, ...OtherExtras${i +
           1} } = ResolverExtras${i + 1};`
     )
   ];
@@ -85,7 +91,8 @@ export default function createGraphqlResolver(objectToCreate, options) {
   });
 
   const getDeleteCleanups = () => {
-    return `${deleteCleanups.join(`;\n        `)};`;
+    if(deleteCleanups.length > 0) return `${deleteCleanups.join(`;\n        `)};`;
+    return "\n";
   };
 
   let mutationItems = [
@@ -99,6 +106,19 @@ export default function createGraphqlResolver(objectToCreate, options) {
         ]
       : []),
     resolverSources.map((src, i) => `${TAB2}...(MutationExtras${i + 1} || {})`).join(",\n")
+  ]
+    .filter(s => s)
+    .join(",\n");
+
+  let subscriptionItems = [
+    ...(!readonly
+      ? [
+          !overrides.has(`on${objName}Created`) ? onCreatedItemTemplate({ objName }) : "",
+          !overrides.has(`on${objName}Updated`) ? onUpdatedItemTemplate({ objName }) : "",
+          !overrides.has(`on${objName}Deleted`) ? onDeletedItemTemplate({ objName }) : ""
+        ]
+      : []),
+    resolverSources.map((src, i) => `${TAB2}...(SubscriptionExtras${i + 1} || {})`).join(",\n")
   ]
     .filter(s => s)
     .join(",\n");
@@ -196,6 +216,7 @@ export default function createGraphqlResolver(objectToCreate, options) {
     .replace(/\${queryItems}/g, queryItems)
     .replace(/\${typeExtras}/g, typeExtras)
     .replace(/\${mutationItems}/g, mutationItems)
+    .replace(/\${subscriptionItems}/g, subscriptionItems)
     .replace(/\${relationshipResolvers}/g, relationshipResolvers)
     .replace(/\${table}/g, objectToCreate.table)
     .replace(/\${objName}/g, objName)
@@ -203,6 +224,6 @@ export default function createGraphqlResolver(objectToCreate, options) {
 
   return `
 ${imports.join("\n")}
-
+const pubsub = new PubSub();
 ${result}`.trim();
 }

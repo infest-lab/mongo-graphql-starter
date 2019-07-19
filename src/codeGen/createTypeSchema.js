@@ -46,7 +46,7 @@ export default function createGraphqlTypeSchema(objectToCreate) {
   let imports = schemaSources.map((src, i) => `import SchemaExtras${i + 1} from "${src}";`);
 
   return `${imports.length ? imports.join("\n") + "\n\n" : ""}export const type = \`
-  
+
 ${[
   createType(name, [
     ...Object.keys(fields).map(k => `${k}: ${fieldType(fields[k])}`),
@@ -93,11 +93,11 @@ ${[
 ]
   .filter(s => s)
   .join("\n\n")}
-  
+
 \`;
-  
-  ${objectToCreate.table ? `\n${createMutationType()}\n\n\n${createQueryType()}` : ""}
-  
+
+  ${objectToCreate.table ? `\n${createMutationType()}\n\n\n${createQueryType()}\n\n\n${createSubscriptionType()}` : ""}
+
 `;
 
   function createMutationType() {
@@ -151,6 +151,27 @@ ${[
     let schemaSourceQueries = schemaSources.map((src, i) => TAB + "${SchemaExtras" + (i + 1) + '.Query || ""}').join("\n\n");
 
     return "export const query = `\n\n" + [allOp, getOp, schemaSourceQueries].filter(s => s).join("\n\n") + "\n\n`;";
+  }
+  function createSubscriptionType() {
+    let allSubscriptions = [
+      ...(!readonly
+        ? [
+            `  on${name}Created:${name}`,
+            createOperation(
+              `on${name}Updated`,
+              [`_id: ${fieldType(fields._id)}`],
+              `${name}`
+            ),
+            createOperation(
+              `on${name}Deleted`,
+              [`_id: ${fieldType(fields._id)}`],
+              `${name}`
+            )
+          ]
+        : []),
+      ...schemaSources.map((src, i) => TAB + "${SchemaExtras" + (i + 1) + '.Subscription || ""}')
+    ].filter(x => x);
+    return "export const subscription = `\n\n" + allSubscriptions.filter(s => s).join("\n\n") + "\n\n`;";
   }
 }
 

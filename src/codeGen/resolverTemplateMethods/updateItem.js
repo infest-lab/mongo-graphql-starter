@@ -16,8 +16,10 @@ export default ({ objName, table }) => `    async update${objName}(root, args, c
         await dbHelpers.runUpdate(db, "${table}", $match, updates, { session });
         await runHook("afterUpdate", $match, updates, { ...gqlPacket, db, session });
         ${mutationComplete()}
-        
+
         let result = $project ? (await load${objName}s(db, { $match, $project, $limit: 1 }, root, args, context, ast))[0] : null;
+        pubsub.publish('${objName}_UPDATED', { on${objName}Updated: result });
+
         return resolverHelpers.mutationSuccessResult({ ${objName}: result, transaction, elapsedTime: 0 });
       });
     }`;

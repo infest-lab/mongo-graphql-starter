@@ -1,26 +1,45 @@
 {
-  "name": "mongo-graphql-starter",
-  "version": "0.9.2",
-  "description": "",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/arackaf/mongo-graphql-starter.git"
+  "_from": "mongo-graphql-starter@^0.9.2",
+  "_id": "mongo-graphql-starter@0.9.2",
+  "_inBundle": false,
+  "_integrity": "sha512-Fw5k8qOgdRCb7qJDlIHLKvuuBnNfc4cXzxI3D9M7pwaR/ycwzMHE5ECihqcy3rockL5w2ldRkMjJ1Aw6W9pKEA==",
+  "_location": "/mongo-graphql-starter",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "mongo-graphql-starter@^0.9.2",
+    "name": "mongo-graphql-starter",
+    "escapedName": "mongo-graphql-starter",
+    "rawSpec": "^0.9.2",
+    "saveSpec": null,
+    "fetchSpec": "^0.9.2"
   },
-  "author": "Adam Rackis",
-  "license": "MIT",
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/mongo-graphql-starter/-/mongo-graphql-starter-0.9.2.tgz",
+  "_shasum": "d4db125381df9a97689352b4d76ceedade87a3d0",
+  "_spec": "mongo-graphql-starter@^0.9.2",
+  "_where": "/home/yat/webapps/casemanagement/graphql-generator",
+  "author": {
+    "name": "Adam Rackis"
+  },
   "bugs": {
     "url": "https://github.com/arackaf/mongo-graphql-starter/issues"
   },
-  "jest": {
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "src/**/*.js"
-    ],
-    "globalSetup": "<rootDir>/test/masterSetup.js"
+  "bundleDependencies": false,
+  "dependencies": {
+    "dataloader": "1.4.0",
+    "escape-string-regexp": "1.0.5",
+    "esm": "^3.2.25",
+    "graphql-type-json": "0.2.1",
+    "lodash.flatmap": "4.5.0",
+    "mkdirp": "0.5.1"
   },
-  "homepage": "https://github.com/arackaf/mongo-graphql-starter",
+  "deprecated": false,
+  "description": "[![npm version](https://img.shields.io/npm/v/mongo-graphql-starter.svg?style=flat)](https://www.npmjs.com/package/mongo-graphql-starter) [![Build Status](https://travis-ci.com/arackaf/mongo-graphql-starter.svg?branch=master)](https://travis-ci.com/arackaf/mongo-graphql-starter) [![codecov](https://codecov.io/gh/arackaf/mongo-graphql-starter/branch/master/graph/badge.svg)](https://codecov.io/gh/arackaf/mongo-graphql-starter) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)",
   "devDependencies": {
     "babel-jest": "21.2.0",
     "babel-plugin-dynamic-import-node": "^1.2.0",
@@ -36,9 +55,29 @@
     "jest": "^24.1.0",
     "mongodb": "^3.1.13"
   },
+  "homepage": "https://github.com/arackaf/mongo-graphql-starter",
+  "jest": {
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "globalSetup": "<rootDir>/test/masterSetup.js"
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "name": "mongo-graphql-starter",
+  "peerDependencies": {
+    "mongodb": ">= 2.2.31",
+    "graphql": ">= 0.13.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arackaf/mongo-graphql-starter.git"
+  },
   "scripts": {
-    "test-local": "jest --runInBand --config=test/jestConfig/jest.configRoot.json",
     "test": "jest --runInBand --bail --detectOpenHandles --config=test/jestConfig/jest.config_travis.json && codecov",
+    "test-local": "jest --runInBand --config=test/jestConfig/jest.configRoot.json",
     "test1": "jest --runInBand --config=test/jestConfig/jest.config1.json",
     "test2": "jest --runInBand --config=test/jestConfig/jest.config2.json",
     "test3": "jest --runInBand --config=test/jestConfig/jest.config3.json",
@@ -49,16 +88,5 @@
     "test8": "jest --runInBand --config=test/jestConfig/jest.config8.json",
     "test9": "jest --runInBand --config=test/jestConfig/jest.config9.json"
   },
-  "dependencies": {
-    "dataloader": "1.4.0",
-    "escape-string-regexp": "1.0.5",
-    "esm": "^3.2.25",
-    "graphql-type-json": "0.2.1",
-    "lodash.flatmap": "4.5.0",
-    "mkdirp": "0.5.1"
-  },
-  "peerDependencies": {
-    "mongodb": ">= 2.2.31",
-    "graphql": ">= 0.13.2"
-  }
+  "version": "0.9.2"
 }

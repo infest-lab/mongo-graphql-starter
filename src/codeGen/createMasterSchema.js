@@ -1,11 +1,11 @@
 export default function createMasterSchema(names, namesWithTables, namesWithoutTables) {
   let schemaImports = namesWithTables
-    .map(n => `import { query as ${n}Query, mutation as ${n}Mutation, type as ${n}Type } from './${n}/schema';`)
+    .map(n => `import { query as ${n}Query, mutation as ${n}Mutation, subscription as ${n}Subscription, type as ${n}Type } from './${n}/schema';`)
     .concat(namesWithoutTables.map(n => `import { type as ${n}Type } from './${n}/schema';`))
     .join("\n");
 
   return `${schemaImports}
-    
+
 export default \`
   scalar JSON
 
@@ -46,6 +46,10 @@ export default \`
 
   type Mutation {
     ${namesWithTables.map(n => "${" + n + "Mutation}").join("\n\n    ")}
+  }
+
+  type Subscription {
+    ${namesWithTables.map(n => "${" + n + "Subscription}").join("\n\n    ")}
   }
 
 \``;
