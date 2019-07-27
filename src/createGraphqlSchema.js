@@ -80,6 +80,8 @@ export default function(source, destPath, options = {}) {
     let names = [];
     let namesWithTables = [];
     let namesWithoutTables = [];
+    let namesWithSubscriptions = [];
+    let namesWithoutSubscriptions = [];
     modules.forEach(objectToCreate => {
       let objName = objectToCreate.__name;
       let modulePath = path.join(rootDir, objName);
@@ -94,6 +96,12 @@ export default function(source, destPath, options = {}) {
         namesWithoutTables.push(objName);
       }
 
+      if (objectToCreate.subscription) {
+        namesWithSubscriptions.push(objName);
+      } else {
+        namesWithoutSubscriptions.push(objName);
+      }
+
       createFile(objPath, createOutputTypeMetadata(objectToCreate), true, modulePath);
 
       createFile(schemaPath, createGraphqlTypeSchema(objectToCreate), true);
@@ -102,9 +110,9 @@ export default function(source, destPath, options = {}) {
       }
     });
 
-    fs.writeFileSync(path.join(rootDir, "schema.js"), createMasterSchema(names, namesWithTables, namesWithoutTables));
+    fs.writeFileSync(path.join(rootDir, "schema.js"), createMasterSchema(names, namesWithTables, namesWithoutTables, namesWithSubscriptions));
 
-    fs.writeFileSync(path.join(rootDir, "resolver.js"), createMasterResolver(namesWithTables));
+    fs.writeFileSync(path.join(rootDir, "resolver.js"), createMasterResolver(namesWithTables, namesWithSubscriptions));
     if (!options.hooks && !fs.existsSync(path.join(rootDir, "hooks.js"))) {
       fs.writeFileSync(
         path.join(rootDir, "hooks.js"),

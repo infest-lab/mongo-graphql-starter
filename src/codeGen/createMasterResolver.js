@@ -1,8 +1,15 @@
 import { TAB, TAB2 } from "./utilities";
 
-export default function createMasterResolver(namesWithTables) {
+export default function createMasterResolver(namesWithTables, namesWithSubscriptions) {
   let resolverImports = namesWithTables.map(n => `import ${n}, { ${n} as ${n}Rest } from './${n}/resolver';`).join("\n");
   let resolverDestructurings = "const " + namesWithTables.map(n => `{ Query: ${n}Query, Mutation: ${n}Mutation, Subscription: ${n}Subscription } = ${n}`).join(";\nconst ") + ";";
+
+  let subscriptions = '';
+  if(namesWithSubscriptions.length > 0){
+    subscriptions = `${TAB}Subscription: Object.assign({},
+    ${TAB2}${namesWithSubscriptions.map(n => `${n}Subscription`).join(`,\n${TAB2}`)}
+    ${TAB}),`;
+  }
 
   return `import GraphQLJSON from 'graphql-type-json';\n\n${resolverImports}\n\n${resolverDestructurings}
 
@@ -15,9 +22,7 @@ ${TAB}),
 ${TAB}Mutation: Object.assign({},
 ${TAB2}${namesWithTables.map(n => `${n}Mutation`).join(`,\n${TAB2}`)}
 ${TAB}),
-${TAB}Subscription: Object.assign({},
-${TAB2}${namesWithTables.map(n => `${n}Subscription`).join(`,\n${TAB2}`)}
-${TAB}),
+${subscriptions}
 ${namesWithTables.length ? TAB : ""}${namesWithTables.map(n => `${n}: {\n${TAB2}...${n}Rest\n${TAB}}`).join(`,\n${TAB}`)}
 };
 

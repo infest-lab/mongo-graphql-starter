@@ -1,6 +1,7 @@
 import { mutationStart, mutationError, mutationOver, mutationMeta, mutationComplete } from "../mutationHelpers";
+import pluralize from "pluralize";
 
-export default ({ objName, table }) => `    async update${objName}sBulk(root, args, context, ast) {
+export default ({ objName, table }) => `    async update${pluralize(objName)}Bulk(root, args, context, ast) {
       ${mutationStart({ objName, op: "update" })}
       return await resolverHelpers.runMutation(session, transaction, async() => {
         let { $match } = decontructGraphqlQuery(args.Match, ast, ${objName}Metadata);

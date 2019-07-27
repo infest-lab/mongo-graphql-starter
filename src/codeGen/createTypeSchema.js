@@ -57,10 +57,10 @@ ${[
   ]),
   ...(objectToCreate.table
     ? [
-        createType(`${name}QueryResults`, [`${name}s: [${name}]`, `Meta: QueryResultsMetadata`]),
+        createType(`${name}QueryResults`, [`${pluralize.plural(name)}: [${name}]`, `Meta: QueryResultsMetadata`]),
         createType(`${name}SingleQueryResult`, [`${name}: ${name}`]),
         createType(`${name}MutationResult`, [`${name}: ${name}`, `success: Boolean`, "Meta: MutationResultInfo"]),
-        createType(`${name}MutationResultMulti`, [`${name}s: [${name}]`, `success: Boolean`, "Meta: MutationResultInfo"]),
+        createType(`${name}MutationResultMulti`, [`${pluralize.plural(name)}: [${name}]`, `success: Boolean`, "Meta: MutationResultInfo"]),
         createType(`${name}BulkMutationResult`, [`success: Boolean`, "Meta: MutationResultInfo"])
       ]
     : []),
@@ -121,11 +121,11 @@ ${[
               `${name}MutationResult`
             ),
             createOperation(
-              `update${name}s`,
+              `update${pluralize.plural(name)}`,
               [`_ids: [String]`, `Updates: ${name}MutationInput`, ...oneToManyForMulti],
               `${name}MutationResultMulti`
             ),
-            createOperation(`update${name}sBulk`, [`Match: ${name}Filters`, `Updates: ${name}MutationInput`], `${name}BulkMutationResult`),
+            createOperation(`update${pluralize.plural(name)}Bulk`, [`Match: ${name}Filters`, `Updates: ${name}MutationInput`], `${name}BulkMutationResult`),
             createOperation(`delete${name}`, [`_id: String`], "DeletionResultInfo")
           ]
         : []),
@@ -136,7 +136,7 @@ ${[
 
   function createQueryType() {
     let allOp = createOperation(
-      `all${name}s`,
+      `all${pluralize.plural(name)}`,
       allQueryFields
         .concat([`OR: [${name}Filters]`, `SORT: ${name}Sort`, `SORTS: [${name}Sort]`, `LIMIT: Int`, `SKIP: Int`, `PAGE: Int`, `PAGE_SIZE: Int`])
         .concat(dateFields.map(f => `${f}_format: String`))
@@ -173,7 +173,8 @@ ${[
         : []),
       ...schemaSources.map((src, i) => TAB + "${SchemaExtras" + (i + 1) + '.Subscription || ""}')
     ].filter(x => x);
-    return "export const subscription = `\n\n" + allSubscriptions.filter(s => s).join("\n\n") + "\n\n`;";
+    if(subscription) return "export const subscription = `\n\n" + allSubscriptions.filter(s => s).join("\n\n") + "\n\n`;";
+    return "";
   }
 }
 

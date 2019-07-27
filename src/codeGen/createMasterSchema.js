@@ -1,8 +1,16 @@
-export default function createMasterSchema(names, namesWithTables, namesWithoutTables) {
+export default function createMasterSchema(names, namesWithTables, namesWithoutTables, namesWithSubscriptions) {
   let schemaImports = namesWithTables
-    .map(n => `import { query as ${n}Query, mutation as ${n}Mutation, subscription as ${n}Subscription, type as ${n}Type } from './${n}/schema';`)
+    .map(n => `import { query as ${n}Query, mutation as ${n}Mutation, type as ${n}Type } from './${n}/schema';`)
+    .concat(namesWithSubscriptions.map(n => `import { subscription as ${n}Subscription } from './${n}/schema';`))
     .concat(namesWithoutTables.map(n => `import { type as ${n}Type } from './${n}/schema';`))
     .join("\n");
+
+    let subscriptions = '';
+    if(namesWithSubscriptions.length > 0){
+      subscriptions = `type Subscription {
+        ${namesWithSubscriptions.map(n => "${" + n + "Subscription}").join("\n\n    ")}
+      }`;
+    }
 
   return `${schemaImports}
 
@@ -48,9 +56,7 @@ export default \`
     ${namesWithTables.map(n => "${" + n + "Mutation}").join("\n\n    ")}
   }
 
-  type Subscription {
-    ${namesWithTables.map(n => "${" + n + "Subscription}").join("\n\n    ")}
-  }
+  ${subscriptions}
 
 \``;
 }

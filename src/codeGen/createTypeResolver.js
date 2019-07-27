@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { TAB, TAB2 } from "./utilities";
 import { MongoIdType, StringType, StringArrayType, MongoIdArrayType } from "../dataTypes";
+import pluralize from "pluralize";
 
 import createItemTemplate from "./resolverTemplateMethods/createItem";
 import updateItemTemplate from "./resolverTemplateMethods/updateItem";
@@ -48,7 +49,6 @@ export default function createGraphqlResolver(objectToCreate, options) {
     `const { getMongoProjection, parseRequestedFields } = projectUtilities;`,
     `const { getUpdateObject, setUpOneToManyRelationshipsForUpdate } = updateUtilities;`,
     `import { ObjectId } from "mongodb";`,
-    `import { PubSub, withFilter } from "apollo-server";`,
     `import ${objName}Metadata from "./${objName}";`,
     ...resolverSources.map(
       (src, i) =>
@@ -59,7 +59,7 @@ export default function createGraphqlResolver(objectToCreate, options) {
 
   let queryItems = [
     !overrides.has(`get${objName}`) ? getItemTemplate : "",
-    !overrides.has(`all${objName}s`) ? allItemsTemplate : "",
+    !overrides.has(`all${pluralize.plural(objName)}`) ? allItemsTemplate : "",
     resolverSources.map((src, i) => `${TAB2}...(QueryExtras${i + 1} || {})`).join(",\n")
   ]
     .filter(s => s)
@@ -101,8 +101,8 @@ export default function createGraphqlResolver(objectToCreate, options) {
       ? [
           !overrides.has(`create${objName}`) ? createItemTemplate({ objName }) : "",
           !overrides.has(`update${objName}`) ? updateItemTemplate({ objName, table }) : "",
-          !overrides.has(`update${objName}s`) ? updateItemsTemplate({ objName, table }) : "",
-          !overrides.has(`update${objName}sBulk`) ? updateItemsBulkTemplate({ objName, table }) : "",
+          !overrides.has(`update${pluralize.plural(objName)}`) ? updateItemsTemplate({ objName, table }) : "",
+          !overrides.has(`update${pluralize.plural(objName)}Bulk`) ? updateItemsBulkTemplate({ objName, table }) : "",
           !overrides.has(`delete${objName}`) ? deleteItemTemplate({ objName, table, relationshipCleanup: getDeleteCleanups() }) : ""
         ]
       : []),
@@ -136,7 +136,7 @@ export default function createGraphqlResolver(objectToCreate, options) {
 
       if (!typeImports.has(relationship.type.__name)) {
         typeImports.add(relationship.type.__name);
-        imports.push(`import { load${relationship.type.__name}s } from "../${relationship.type.__name}/resolver";`);
+        imports.push(`import { load${pluralize.plural(relationship.type.__name)} } from "../${relationship.type.__name}/resolver";`);
         imports.push(`import ${relationship.type.__name}Metadata from "../${relationship.type.__name}/${relationship.type.__name}";`);
       }
 
@@ -213,6 +213,11 @@ export default function createGraphqlResolver(objectToCreate, options) {
     });
   }
 
+  if(subscription){
+    imports.push(`import { PubSub, withFilter } from "apollo-server";`);
+    imports.push(`const pubsub = new PubSub();`);
+  }
+
   result += template
     .replace(/\${queryItems}/g, queryItems)
     .replace(/\${typeExtras}/g, typeExtras)
@@ -220,11 +225,12 @@ export default function createGraphqlResolver(objectToCreate, options) {
     .replace(/\${subscriptionItems}/g, subscriptionItems)
     .replace(/\${relationshipResolvers}/g, relationshipResolvers)
     .replace(/\${table}/g, objectToCreate.table)
+    .replace(/\${objName}s/g, pluralize.plural(objName))
     .replace(/\${objName}/g, objName)
+    .replace(/Subscription: {}/g, '')
     .replace(/\${objNameLower}/g, objName.toLowerCase());
 
   return `
 ${imports.join("\n")}
-const pubsub = new PubSub();
 ${result}`.trim();
 }
