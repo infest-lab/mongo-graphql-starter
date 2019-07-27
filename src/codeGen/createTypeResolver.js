@@ -26,6 +26,7 @@ export default function createGraphqlResolver(objectToCreate, options) {
   let allItemsTemplate = fs.readFileSync(path.resolve(__dirname, "./resolverTemplateMethods/allItems.txt"), { encoding: "utf8" });
   let hooksPath = `"../hooks"`;
   let readonly = objectToCreate.readonly;
+  let subscription = objectToCreate.subscription;
 
   let objName = objectToCreate.__name;
   let table = objectToCreate.table;
@@ -111,7 +112,7 @@ export default function createGraphqlResolver(objectToCreate, options) {
     .join(",\n");
 
   let subscriptionItems = [
-    ...(!readonly
+    ...(subscription
       ? [
           !overrides.has(`on${objName}Created`) ? onCreatedItemTemplate({ objName }) : "",
           !overrides.has(`on${objName}Updated`) ? onUpdatedItemTemplate({ objName }) : "",

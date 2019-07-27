@@ -15,6 +15,7 @@ import {
 import { TAB } from "./utilities";
 import { createOperation as createOperationOriginal, createInput, createType } from "./gqlSchemaHelpers";
 import flatMap from "lodash.flatmap";
+import pluralize from "pluralize";
 
 const TAB2 = TAB + TAB;
 
@@ -31,6 +32,7 @@ export default function createGraphqlTypeSchema(objectToCreate) {
   let schemaSources = extras.schemaSources || [];
   let resolvedFields = objectToCreate.resolvedFields || {};
   let readonly = objectToCreate.readonly;
+  let subscription = objectToCreate.subscription;
 
   const createOperation = createOperationOriginal.bind(null, { overrides });
 
@@ -154,7 +156,7 @@ ${[
   }
   function createSubscriptionType() {
     let allSubscriptions = [
-      ...(!readonly
+      ...(subscription
         ? [
             `  on${name}Created:${name}`,
             createOperation(
