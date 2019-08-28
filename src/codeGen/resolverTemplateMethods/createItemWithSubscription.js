@@ -17,6 +17,7 @@ export default ({ objName }) =>
         ${mutationComplete()}
 
         let result = $project ? (await load${pluralize(objName)}(db, { $match: { _id: newObject._id }, $project, $limit: 1 }, root, args, context, ast))[0] : null;
+        pubsub.publish('${objName}_CREATED', { on${objName}Created: result });
         return resolverHelpers.mutationSuccessResult({ ${objName}: result, transaction, elapsedTime: 0 });
       });
     }`;

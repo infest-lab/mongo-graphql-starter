@@ -14,7 +14,8 @@ export default ({ objName, table, relationshipCleanup }) => `    async delete${o
         await dbHelpers.runDelete(db, "${table}", $match);
         await runHook("afterDelete", $match, { ...gqlPacket, db, session });
         ${relationshipCleanup}
-        
+        pubsub.publish('${objName}_DELETED', { on${objName}Deleted: $match });
+
         return await resolverHelpers.finishSuccessfulMutation(session, transaction);
       } ${mutationError()} ${mutationOver()}
     }`;

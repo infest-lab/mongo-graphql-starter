@@ -19,6 +19,7 @@ export default ({ objName, table }) => `    async update${objName}(root, args, c
         ${mutationComplete()}
 
         let result = $project ? (await load${pluralize(objName)}(db, { $match, $project, $limit: 1 }, root, args, context, ast))[0] : null;
+        pubsub.publish('${objName}_UPDATED', { on${objName}Updated: result });
 
         return resolverHelpers.mutationSuccessResult({ ${objName}: result, transaction, elapsedTime: 0 });
       });

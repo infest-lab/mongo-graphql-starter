@@ -5,11 +5,13 @@ import { MongoIdType, StringType, StringArrayType, MongoIdArrayType } from "../d
 import pluralize from "pluralize";
 
 import createItemTemplate from "./resolverTemplateMethods/createItem";
+import createItemWithSubscriptionTemplate from "./resolverTemplateMethods/createItemWithSubscription";
 import updateItemTemplate from "./resolverTemplateMethods/updateItem";
+import updateItemWithSubscriptionTemplate from "./resolverTemplateMethods/updateItemWithSubscription";
 import updateItemsTemplate from "./resolverTemplateMethods/updateItems";
 import updateItemsBulkTemplate from "./resolverTemplateMethods/updateItemsBulk";
 import deleteItemTemplate from "./resolverTemplateMethods/deleteItem";
-
+import deleteItemWithSubscriptionTemplate from "./resolverTemplateMethods/deleteItemWithSubscription";
 
 import onCreatedItemTemplate from "./resolverTemplateMethods/onCreatedItem";
 import onUpdatedItemTemplate from "./resolverTemplateMethods/onUpdatedItem";
@@ -99,11 +101,11 @@ export default function createGraphqlResolver(objectToCreate, options) {
   let mutationItems = [
     ...(!readonly
       ? [
-          !overrides.has(`create${objName}`) ? createItemTemplate({ objName }) : "",
-          !overrides.has(`update${objName}`) ? updateItemTemplate({ objName, table }) : "",
+          !overrides.has(`create${objName}`) ? (subscription ? createItemWithSubscriptionTemplate({ objName }) : createItemTemplate({ objName })) : "",
+          !overrides.has(`update${objName}`) ? (subscription ? updateItemWithSubscriptionTemplate({ objName, table }) : updateItemTemplate({ objName, table })) : "",
           !overrides.has(`update${pluralize.plural(objName)}`) ? updateItemsTemplate({ objName, table }) : "",
           !overrides.has(`update${pluralize.plural(objName)}Bulk`) ? updateItemsBulkTemplate({ objName, table }) : "",
-          !overrides.has(`delete${objName}`) ? deleteItemTemplate({ objName, table, relationshipCleanup: getDeleteCleanups() }) : ""
+          !overrides.has(`delete${objName}`) ? (subscription ? deleteItemWithSubscriptionTemplate({ objName, table, relationshipCleanup: getDeleteCleanups() }) : deleteItemTemplate({ objName, table, relationshipCleanup: getDeleteCleanups() })) : ""
         ]
       : []),
     resolverSources.map((src, i) => `${TAB2}...(MutationExtras${i + 1} || {})`).join(",\n")
