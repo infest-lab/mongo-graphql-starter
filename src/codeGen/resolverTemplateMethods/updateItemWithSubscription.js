@@ -1,5 +1,4 @@
 import { mutationStart, mutationError, mutationOver, mutationMeta, mutationComplete } from "../mutationHelpers";
-import pluralize from "pluralize";
 
 export default ({ objName, table }) => `    async update${objName}(root, args, context, ast) {
       ${mutationStart({ objName, op: "update" })}
@@ -18,7 +17,7 @@ export default ({ objName, table }) => `    async update${objName}(root, args, c
         await runHook("afterUpdate", $match, updates, { ...gqlPacket, db, session });
         ${mutationComplete()}
 
-        let result = $project ? (await load${pluralize(objName)}(db, { $match, $project, $limit: 1 }, root, args, context, ast))[0] : null;
+        let result = $project ? (await load${objName}s(db, { $match, $project, $limit: 1 }, root, args, context, ast))[0] : null;
         pubsub.publish('${objName}_UPDATED', { on${objName}Updated: result });
 
         return resolverHelpers.mutationSuccessResult({ ${objName}: result, transaction, elapsedTime: 0 });

@@ -15,7 +15,6 @@ import {
 import { TAB } from "./utilities";
 import { createOperation as createOperationOriginal, createInput, createType } from "./gqlSchemaHelpers";
 import flatMap from "lodash.flatmap";
-import pluralize from "pluralize";
 
 const TAB2 = TAB + TAB;
 

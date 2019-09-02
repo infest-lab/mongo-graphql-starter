@@ -1,5 +1,4 @@
 import { mutationStart, mutationComplete, mutationError, mutationOver, mutationMeta } from "../mutationHelpers";
-import pluralize from "pluralize";
 
 export default ({ objName }) =>
   `    async create${objName}(root, args, context, ast) {
@@ -16,7 +15,7 @@ export default ({ objName }) =>
         await setUpOneToManyRelationships(newObject, args.${objName}, ${objName}Metadata, { ...gqlPacket, db, session });
         ${mutationComplete()}
 
-        let result = $project ? (await load${pluralize(objName)}(db, { $match: { _id: newObject._id }, $project, $limit: 1 }, root, args, context, ast))[0] : null;
+        let result = $project ? (await load${objName}s(db, { $match: { _id: newObject._id }, $project, $limit: 1 }, root, args, context, ast))[0] : null;
         pubsub.publish('${objName}_CREATED', { on${objName}Created: result });
         return resolverHelpers.mutationSuccessResult({ ${objName}: result, transaction, elapsedTime: 0 });
       });
