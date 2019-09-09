@@ -1,0 +1,26 @@
+async jenisKelamin(obj, args, context, ast){
+  if (context.__StatistikKorban_byGender_DataLoader == null) {
+    let db = await context.__mongodb;
+    context.__StatistikKorban_byGender_DataLoader = new DataLoader(async keys => {
+      let $match = { _id: { $in: keys.filter(id => id).map(id => {
+        if(id !== 'null') return ObjectId(id);
+      }) } };
+      let queryPacket = decontructGraphqlQuery(args, ast, JenisKelaminMetadata, null);
+      let { $project, $sort, $limit, $skip } = queryPacket;
+
+      let aggregateItems = [{ $match }, { $project }];
+      let results = await dbHelpers.runQuery(db, "datajeniskelamin", aggregateItems);
+      cleanUpResults(results, JenisKelaminMetadata);
+
+      let destinationMap = new Map([]);
+      for (let result of results) {
+        destinationMap.set("" + result._id, result);
+      }
+      return keys.map(id => destinationMap.get("" + id) || null);
+    });
+  }
+  return obj._id == null ? null : context.__StatistikKorban_byGender_DataLoader.load(obj._id);
+},
+jumlah(obj, args, context, ast){
+  return obj.count ? obj.count : 0;
+}

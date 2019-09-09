@@ -30,19 +30,30 @@ export default function createGraphqlTypeSchema(objectToCreate) {
   let overrides = new Set(extras.overrides || []);
   let schemaSources = extras.schemaSources || [];
   let resolvedFields = objectToCreate.resolvedFields || {};
-  let readonly = objectToCreate.readonly;
-  let subscription = objectToCreate.subscription;
+  let readonly = objectToCreate.readonly || false;
+  let subscription = objectToCreate.subscription || false;
+  let aggregate = false;
+  let aggregateQueryFields = [];
+  if(objectToCreate.aggregateResolver){
+    if(objectToCreate.for) aggregate = true;
+  }
 
   const createOperation = createOperationOriginal.bind(null, { overrides });
+  if(aggregate){
+    let _fields = objectToCreate.for.type.fields
+    Object.keys(_fields).forEach(k => {
+      aggregateQueryFields.push(...queriesForField(k, _fields[k]));
+    });
+  }else{
+    Object.keys(fields).forEach(k => {
+      allQueryFields.push(...queriesForField(k, fields[k]));
+      allFieldsMutation.push(`${k}: ${fieldType(fields[k], true)}`);
+    });
+  }
 
-  Object.keys(fields).forEach(k => {
-    allQueryFields.push(...queriesForField(k, fields[k]));
-    allFieldsMutation.push(`${k}: ${fieldType(fields[k], true)}`);
-  });
   if (Array.isArray(objectToCreate.manualQueryArgs)) {
     manualQueryArgs.push(...objectToCreate.manualQueryArgs.map(arg => `${arg.name}: ${arg.type}`));
   }
-
   let dateFields = Object.keys(fields).filter(k => fields[k] === DateType || (typeof fields[k] === "object" && fields[k].__isDate));
   let imports = schemaSources.map((src, i) => `import SchemaExtras${i + 1} from "${src}";`);
 
@@ -63,6 +74,13 @@ ${[
         createType(`${name}BulkMutationResult`, [`success: Boolean`, "Meta: MutationResultInfo"])
       ]
     : []),
+  ...(aggregate
+    ?
+    [
+      createType(`${name}QueryResult`, [`${name}: ${name}`, `Meta: QueryResultsMetadata`])
+    ]
+    : [] ),
+
   objectToCreate.hasOneToManyRelationship
     ? createInput(`${name}InputLocal`, [
         ...Object.keys(fields).map(k => `${k}: ${fieldType(fields[k], true)}`),
@@ -71,36 +89,47 @@ ${[
           .map(([k, rel]) => `${k}: ${relationshipType(rel, true)}`)
       ])
     : null,
+
   createInput(`${name}Input`, [
     ...Object.keys(fields).map(k => `${k}: ${fieldType(fields[k], true)}`),
     ...Object.entries(relationships)
       .filter(([k, rel]) => !rel.readonly)
       .map(([k, rel]) => `${k}: ${relationshipType(rel, true)}`)
   ]),
+  !readonly
+  ?
   createInput(`${name}MutationInput`, [
     ...flatMap(Object.keys(fields).filter(k => k != "_id"), k => fieldMutations(k, fields)),
     ...Object.entries(relationships)
       .filter(([k, rel]) => !rel.oneToMany)
       .map(([k, rel]) => (rel.__isArray ? `${k}_ADD: ${relationshipType(rel, true)}` : `${k}_SET: ${relationshipType(rel, true)}`))
-  ]),
-  objectToCreate.__usedInArray ? createInput(`${name}ArrayMutationInput`, ["index: Int", `Updates: ${name}MutationInput`]) : null,
+  ]): null,
+
+  objectToCreate.__usedInArray &&  objectToCreate.table ? createInput(`${name}ArrayMutationInput`, ["index: Int", `Updates: ${name}MutationInput`]) : null,
+  objectToCreate.table ?
   createInput(
     `${name}Sort`,
     Object.keys(fields)
       .filter(k => objectToCreate.fields[k] !== JSONType)
       .map(k => `${k}: Int`)
-  ),
+  ):null,
+
   createInput(`${name}Filters`, allQueryFields.concat([`OR: [${name}Filters]`]))
+
 ]
   .filter(s => s)
   .join("\n\n")}
 
 \`;
 
-  ${objectToCreate.table ? `\n${createMutationType()}\n\n\n${createQueryType()}\n\n\n${createSubscriptionType()}` : ""}
-
+  ${
+    objectToCreate.table ?
+    `\n${createMutationType()}\n\n${createQueryType()}\n\n${createSubscriptionType()}` :
+    objectToCreate.aggregateResolver ? `\n${createMutationType()}\n${createAggregateQueryType()}\n${createSubscriptionType()}` : ""
+  }
 `;
 
+  // ${aggregate ? `\n${createMutationType()}\n\n\n${createAggregateQueryType()}\n\n\n${createSubscriptionType()}` : ""}
   function createMutationType() {
     let oneToManyForSingle = relationshipEntries
       .filter(([k, rel]) => rel.oneToMany && rel.fkField == "_id")
@@ -153,6 +182,22 @@ ${[
 
     return "export const query = `\n\n" + [allOp, getOp, schemaSourceQueries].filter(s => s).join("\n\n") + "\n\n`;";
   }
+
+  function createAggregateQueryType() {
+    let getOp = aggregate ? createOperation(
+      `get${name}`,
+      aggregateQueryFields
+        .concat([`OR: [${objectToCreate.for.type.__name}Filters]`, `SORT: ${objectToCreate.for.type.__name}Sort`, `SORTS: [${objectToCreate.for.type.__name}Sort]`, `LIMIT: Int`, `SKIP: Int`, `PAGE: Int`, `PAGE_SIZE: Int`])
+        .concat(dateFields.map(f => `${f}_format: String`))
+        .concat(manualQueryArgs),
+      `${name}QueryResult`
+    ): null;
+
+    let schemaSourceQueries = schemaSources.map((src, i) => TAB + "${SchemaExtras" + (i + 1) + '.Query || ""}').join("\n\n");
+
+    return "export const query = `\n\n" + [getOp, schemaSourceQueries].filter(s => s).join("\n\n") + "\n\n`;";
+  }
+
   function createSubscriptionType() {
     let allSubscriptions = [
       ...(subscription

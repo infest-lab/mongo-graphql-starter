@@ -1,0 +1,3 @@
+async ${targetObjName}(obj, args, context, ast){
+  return obj.count ? obj.count : 0;
+}

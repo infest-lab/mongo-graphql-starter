@@ -1,0 +1,18 @@
+async ${targetObjName}(obj, args, context, ast){
+  let db = await context.__mongodb;
+  let ids = []
+  obj.ids.forEach(v=>{
+    if(v && v !== 'null') ids.push(ObjectId(v))
+  })
+  let aggregateItems = [
+    {$match:{_id: { $in: ids }}},
+    {$group:{
+      _id:"$${keyField}",
+      count: {$sum: 1}
+    }},
+    {$project:{count:1,_id:1}}
+  ];
+  let results = await dbHelpers.runQuery(db, "${table}", aggregateItems);
+  cleanUpResults(results, ${targetTypeName}Metadata);
+  return results;
+}

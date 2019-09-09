@@ -1,0 +1,16 @@
+export const ${objName} = {
+${aggregateResolvers}
+${typeExtras}
+}
+
+export default {
+  Query: {
+${queryItems}
+  },
+  Mutation: {
+${mutationItems}
+  },
+  Subscription: {
+${subscriptionItems}
+  }
+};

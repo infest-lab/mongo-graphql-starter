@@ -4,6 +4,7 @@ import mkdirp from "mkdirp";
 
 import { MongoIdType, StringArrayType, MongoIdArrayType, IntArrayType, FloatArrayType } from "./dataTypes";
 import createTypeResolver from "./codeGen/createTypeResolver";
+import createTypeAggregateResolver from "./codeGen/createTypeAggregateResolver";
 import createGraphqlTypeSchema from "./codeGen/createTypeSchema";
 import createOutputTypeMetadata from "./codeGen/createTypeMetadata";
 import createMasterSchema from "./codeGen/createMasterSchema";
@@ -91,14 +92,19 @@ export default function(source, destPath, options = {}) {
       if (objectToCreate.table) {
         namesWithTables.push(objName);
       } else {
-        namesWithoutTables.push(objName);
+        if(objectToCreate.aggregateResolver){
+          namesWithTables.push(objName);
+        }else namesWithoutTables.push(objName);
       }
+
 
       createFile(objPath, createOutputTypeMetadata(objectToCreate), true, modulePath);
 
       createFile(schemaPath, createGraphqlTypeSchema(objectToCreate), true);
       if (objectToCreate.table) {
         createFile(resolverPath, createTypeResolver(objectToCreate, { ...options, modulePath }), true);
+      }else if(objectToCreate.aggregateResolver){
+        createFile(resolverPath, createTypeAggregateResolver(objectToCreate, { ...options, modulePath }), true);
       }
     });
 
